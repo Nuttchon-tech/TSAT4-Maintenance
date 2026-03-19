@@ -784,7 +784,9 @@ function buildTypeChart() {
 
 // ─── Rank Table ─────────────────────────────────────────────────
 function buildRankTable() {
-  const sorted = [...DATA.summary].sort((a,b) => b.total - a.total).slice(0,7);
+  const sorted = [...DATA.summary]
+  .filter(d => d["MC.Name"] !== "ไม่ระบุ")
+  .sort((a,b) => b.total - a.total).slice(0,7);
   const max = sorted[0].total;
   const tbl = document.getElementById('rankTable');
   tbl.innerHTML = `
@@ -910,8 +912,25 @@ function closeDetail() {
   document.querySelectorAll('.mc-card').forEach(c => c.classList.remove('active'));
   activeCard = null;
 }
+function calculateKPIWithoutUnknown() {
+  const filtered = DATA.summary.filter(d => d["MC.Name"] !== "ไม่ระบุ");
 
+  const total = filtered.reduce((sum, d) => sum + d.total, 0);
+  const service = filtered.reduce((sum, d) => sum + d.service, 0);
+  const breakdown = filtered.reduce((sum, d) => sum + d.breakdown, 0);
+  const shutdown = filtered.reduce((sum, d) => sum + d.shutdown, 0);
+  const hours = filtered.reduce((sum, d) => sum + d.repair_hours, 0);
+  const budget = filtered.reduce((sum, d) => sum + d.budget, 0);
+
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-service').textContent = service;
+  document.getElementById('kpi-bd').textContent = breakdown;
+  document.getElementById('kpi-sd').textContent = shutdown;
+  document.getElementById('kpi-hours').textContent = hours.toFixed(1);
+  document.getElementById('kpi-budget').textContent = budget.toLocaleString();
+}
 // ─── Init ───────────────────────────────────────────────────────
+calculateKPIWithoutUnknown();
 buildMonthlyChart();
 buildTypeChart();
 buildRankTable();
