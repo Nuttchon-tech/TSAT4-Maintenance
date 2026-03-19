@@ -232,9 +232,10 @@
   /* Machine cards */
   .mc-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
+  grid-template-columns: 1fr;  /* บังคับให้มีแค่ 1 คอลัมน์ */
+  gap: 16px;
+  margin-bottom: 32px;
+  width: 100%;
   }
 
   .mc-card {
@@ -515,7 +516,7 @@
     <div class="header-title">
       <div class="header-icon">⚙️</div>
       <div>
-        <h1>MO Maintenance Dashboard
+        <h1>Report MO Maintenance
           <span>สรุปใบแจ้งซ่อม (MO) ประจำปี 2026</span>
         </h1>
       </div>
