@@ -636,29 +636,84 @@ const DATA = {
   ],
   "detail": {
     "BENDING": {
+      "breakdown": {
       "problems": ["สายน้ำมัน Hydraulic เครื่อง Bending BD-01 ชำรุด","ฝาปุ่มกด Hand Switch ชำรุด","แกน Support Bending ขาด ชำรุด"],
       "causes": ["เกิดจากอายุการใช้งานของสาย","ฝาปุ่มกด คลายเกลียว","เกิดจากการตั้ง Alignment หลังจากมีการปรับเปลี่ยนอุปกรณ์"],
       "fixes": ["ทำการเปลี่ยนสายน้ำมันใหม่ทดแทน","ขันอัดฝาปุ่มกดใหม่","นำ Spare Part ไปเปลี่ยนและสั่งซื้อทดแทน"]
+        },
+  "service": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
+  },
+  "shutdown": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
     },
     "HDF": {
+      "breakdown": {
       "problems": ["เครื่องจักร HDF-02 เปิดเครื่องแล้ว Main Drive ตัด"],
       "causes": ["เกิดปัญหาจากชุด Filter ตัน"],
       "fixes": ["ทำการเปลี่ยน Filter ใหม่ทดแทน 2 Pc"]
+        },
+  "service": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
+  },
+  "shutdown": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
     },
     "LASER": {
+      "breakdown": {
       "problems": ["ชุด Timer Relay ของระบบหล่อเย็นชำรุด และมีลมรั่วบริเวณ Bowl Module","อุปกรณ์ Pump น้ำมัน Conveyer ของเครื่อง Laser LS-03 ชำรุด"],
       "causes": ["เกิดจากอายุการใช้งานของอุปกรณ์","เกิดจาก Sensor เช็ค Piston ชำรุด"],
       "fixes": ["ทำการเปลี่ยนอุปกรณ์ใหม่ทดแทน","นำ Spare Part ไปเปลี่ยนและสั่งซื้อทดแทน"]
+          },
+  "service": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
+  },
+  "shutdown": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
     },
     "ROBOT": {
-      "problems": ["Robot RB-102 สัญญาณเชื่อมต่อขาดหาย"],
-      "causes": ["เกิดจากสาย CC-Link ระหว่าง Robot กับ ตู้เชื่อมชำรุด"],
-      "fixes": ["ทำการตรวจสอบและขันให้แน่น"]
+    "breakdown": {
+    "problems": ["Robot RB-102 สัญญาณเชื่อมต่อขาดหาย"],
+    "causes": ["เกิดจากสาย CC-Link ระหว่าง Robot กับ ตู้เชื่อมชำรุด"],
+    "fixes": ["ทำการตรวจสอบและขันให้แน่น"]
+  },
+  "service": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
+  },
+  "shutdown": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
     },
     "SCRAP CONVEYOR": {
+      "breakdown": {
       "problems": ["ราง Scrap Conveyer Laser HDF-02 ชำรุด"],
       "causes": ["เนื่องจากการสึกหรอของอุปกรณ์ที่ใช้มาระยะเวลานาน"],
       "fixes": ["แก้ไขซ่อมให้ผลิตงานได้ชั่วคราว"]
+        },
+  "service": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
+  },
+  "shutdown": {
+    "problems": [],
+    "causes": [],
+    "fixes": []
     },
     "ไม่ระบุ": {
       "problems": ["ประตูหลุดเปิด-ปิดไม่ได้","ไฟส่องสว่างห้องน้ำไม่ติด","Conveyer Load Pipe Line GOR Alarm"],
@@ -873,7 +928,10 @@ let activeCard = null;
 
 function showDetail(name) {
   const panel = document.getElementById('detailPanel');
-  const d = DATA.detail[name] || {problems:[], causes:[], fixes:[]};
+  const type = currentFilter === 'all' ? 'breakdown' : currentFilter;
+
+const d = (DATA.detail[name] && DATA.detail[name][type]) 
+  || {problems:[], causes:[], fixes:[]};
 
   if (activeCard === name) { closeDetail(); return; }
 
