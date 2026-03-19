@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MO Dashboard 2026 — Maintenance Summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d47;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #7fff6b;
+    --warn: #ffca28;
+    --danger: #ff4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --robot: #00d4ff;
+    --bending: #ff6b35;
+    --simpac: #7fff6b;
+    --laser: #c77dff;
+    --hdf: #ffca28;
+    --other: #94a3b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: 20%;
+    width: 400px; height: 200px;
+    background: radial-gradient(circle, rgba(127,255,107,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), #0080ff);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 24px rgba(0,212,255,0.3);
+  }
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  h1 span {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+  }
+  .badge.live {
+    border-color: rgba(127,255,107,0.3);
+    color: var(--accent3);
+    background: rgba(127,255,107,0.05);
+  }
+
+  /* Layout */
+  main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 40px;
+  }
+
+  /* KPI Cards Row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 600px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } main { padding: 20px 16px; } }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .kpi-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--kpi-color, var(--accent));
+    opacity: 0.7;
+  }
+  .kpi-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-size: 2rem;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--kpi-color, var(--text));
+    line-height: 1;
+  }
+  .kpi-sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 2px;
+    display: block;
+  }
+
+  /* Charts grid */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .chart-card.wide { grid-column: 1 / -1; }
+  .chart-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 260px;
+  }
+  .chart-wrap.tall { height: 320px; }
+
+  /* Machine cards */
+  .mc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .mc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  .mc-card:hover {
+    border-color: rgba(0,212,255,0.3);
+    box-shadow: 0 0 24px rgba(0,212,255,0.06);
+    transform: translateY(-2px);
+  }
+  .mc-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 32px rgba(0,212,255,0.12);
+  }
+
+  .mc-header {
+    padding: 16px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .mc-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+  .mc-total {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+  }
+
+  .mc-stats {
+    padding: 14px 20px;
+    display: flex;
+    gap: 16px;
+  }
+  .mc-stat {
+    flex: 1;
+    text-align: center;
+  }
+  .mc-stat-val {
+    font-size: 1.4rem;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1;
+  }
+  .mc-stat-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+  .stat-service { color: var(--accent); }
+  .stat-breakdown { color: var(--danger); }
+  .stat-shutdown { color: var(--warn); }
+
+  .mc-bar {
+    height: 4px;
+    background: var(--surface2);
+    display: flex;
+    overflow: hidden;
+  }
+  .mc-bar-s { background: var(--accent); }
+  .mc-bar-bd { background: var(--danger); }
+  .mc-bar-sd { background: var(--warn); }
+
+  .mc-footer {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mc-hours {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .mc-hours strong {
+    color: var(--accent3);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .mc-budget {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .mc-budget strong {
+    color: var(--warn);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Detail panel */
+  .detail-panel {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 32px;
+    display: none;
+    animation: slideDown 0.2s ease;
+  }
+  .detail-panel.show { display: block; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .detail-header {
+    background: rgba(0,212,255,0.05);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .detail-mc-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+  }
+  .detail-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .detail-close:hover { color: var(--text); border-color: rgba(255,255,255,0.3); }
+
+  .detail-body {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 800px) { .detail-body { grid-template-columns: 1fr; } }
+
+  .detail-section h4 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .detail-list li {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: #cbd5e1;
+    padding-left: 12px;
+    position: relative;
+  }
+  .detail-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 0.6rem;
+    top: 3px;
+  }
+  .detail-list.causes li::before { color: var(--warn); }
+  .detail-list.fixes li::before { color: var(--accent3); }
+  .empty-detail {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* Rank table */
+  .rank-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .rank-table th {
+    text-align: left;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding: 0 12px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .rank-table td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .rank-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .rank-num {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    font-size: 0.7rem;
+  }
+  .rank-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .rank-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .rank-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), #0080ff);
+  }
+  .rank-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* Filter tabs */
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-tab {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+  }
+  .filter-tab:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .filter-tab.active {
+    background: rgba(0,212,255,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  footer span { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <div class="header-icon">⚙️</div>
+      <div>
+        <h1>MO Maintenance Dashboard
+          <span>สรุปใบแจ้งซ่อม (MO) ประจำปี 2026</span>
+        </h1>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="badge live">● Live Data</div>
+      <div class="badge">Jan – Mar 2026</div>
+      <div class="badge">Facility Dept.</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card" style="--kpi-color:#00d4ff">
+      <div class="kpi-label">Total MO</div>
+      <div class="kpi-value" id="kpi-total">142</div>
+      <div class="kpi-sub">ใบแจ้งซ่อมทั้งหมด</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#00d4ff">
+      <div class="kpi-label">Service</div>
+      <div class="kpi-value" id="kpi-service" style="color:var(--accent)">100</div>
+      <div class="kpi-sub">70.4% ของทั้งหมด</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#ff4444">
+      <div class="kpi-label">Breakdown</div>
+      <div class="kpi-value" id="kpi-bd" style="color:var(--danger)">6</div>
+      <div class="kpi-sub">เครื่องจักรขัดข้อง</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#ffca28">
+      <div class="kpi-label">Shut Down</div>
+      <div class="kpi-value" id="kpi-sd" style="color:var(--warn)">7</div>
+      <div class="kpi-sub">หยุดซ่อม</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#7fff6b">
+      <div class="kpi-label">ชั่วโมงซ่อม</div>
+      <div class="kpi-value" id="kpi-hours" style="color:var(--accent3)">15.2</div>
+      <div class="kpi-sub">รวมทั้งหมด (ชม.)</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#ffca28">
+      <div class="kpi-label">งบประมาณ</div>
+      <div class="kpi-value" id="kpi-budget" style="color:var(--warn);font-size:1.3rem">95,360</div>
+      <div class="kpi-sub">บาท (spare parts)</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">MO จำนวนต่อเดือน (แยกประเภทเครื่องจักร)</div>
+      <div class="chart-wrap tall">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">สัดส่วนประเภทการแจ้งซ่อม</div>
+      <div class="chart-wrap" style="height:200px;margin-bottom:24px">
+        <canvas id="typeChart"></canvas>
+      </div>
+      <div class="chart-title" style="margin-top:8px">Top 5 เครื่องจักร (จำนวน MO)</div>
+      <div style="overflow-x:auto">
+        <table class="rank-table" id="rankTable"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Machine Cards -->
+  <div class="section-header">
+    <div class="section-title">สรุปปัญหาแยกตามประเภทเครื่องจักร</div>
+    <div class="filter-tabs">
+      <div class="filter-tab active" onclick="filterCards('all', this)">ทั้งหมด</div>
+      <div class="filter-tab" onclick="filterCards('breakdown', this)">Breakdown</div>
+      <div class="filter-tab" onclick="filterCards('shutdown', this)">Shut Down</div>
+      <div class="filter-tab" onclick="filterCards('service', this)">Service</div>
+    </div>
+  </div>
+
+  <div id="detailPanel" class="detail-panel">
+    <div class="detail-header">
+      <div class="detail-mc-name" id="detailName"></div>
+      <button class="detail-close" onclick="closeDetail()">✕ ปิด</button>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+  </div>
+
+  <div class="mc-grid" id="mcGrid"></div>
+
+</main>
+
+<footer>
+  MO Maintenance Dashboard 2026 &nbsp;·&nbsp; Facility Department &nbsp;·&nbsp; Generated from <span>สรุป MO ประจำปี 2026.xlsx</span>
+</footer>
+
+<script>
+// ─── Embedded Data ──────────────────────────────────────────────
+const DATA = {
+  "summary": [
+    {"MC.Name":"BENDING","total":24,"service":12,"breakdown":3,"shutdown":1,"budget":0,"repair_hours":1.6},
+    {"MC.Name":"CONVEYOR","total":1,"service":0,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"CRANE","total":2,"service":1,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"HANKDHELD MOBILE","total":1,"service":1,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"HDF","total":3,"service":0,"breakdown":0,"shutdown":2,"budget":95360,"repair_hours":2.0},
+    {"MC.Name":"HYDROFORM","total":2,"service":0,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"LASER","total":12,"service":11,"breakdown":1,"shutdown":0,"budget":0,"repair_hours":3.0},
+    {"MC.Name":"MARK","total":1,"service":0,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"NUT FEEDER","total":1,"service":0,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"RIVET","total":3,"service":3,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"ROBOT","total":36,"service":27,"breakdown":1,"shutdown":2,"budget":0,"repair_hours":0.3},
+    {"MC.Name":"SCRAP CONVEYOR","total":1,"service":0,"breakdown":0,"shutdown":1,"budget":0,"repair_hours":6.0},
+    {"MC.Name":"SEYI","total":4,"service":4,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"SIMPAC","total":13,"service":10,"breakdown":1,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"STATIONARY","total":1,"service":1,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":0},
+    {"MC.Name":"STUD","total":1,"service":0,"breakdown":0,"shutdown":1,"budget":0,"repair_hours":0},
+    {"MC.Name":"ไม่ระบุ","total":36,"service":30,"breakdown":0,"shutdown":0,"budget":0,"repair_hours":2.3}
+  ],
+  "detail": {
+    "BENDING": {
+      "problems": ["สายน้ำมัน Hydraulic เครื่อง Bending BD-01 ชำรุด","ฝาปุ่มกด Hand Switch ชำรุด","แกน Support Bending ขาด ชำรุด"],
+      "causes": ["เกิดจากอายุการใช้งานของสาย","ฝาปุ่มกด คลายเกลียว","เกิดจากการตั้ง Alignment หลังจากมีการปรับเปลี่ยนอุปกรณ์"],
+      "fixes": ["ทำการเปลี่ยนสายน้ำมันใหม่ทดแทน","ขันอัดฝาปุ่มกดใหม่","นำ Spare Part ไปเปลี่ยนและสั่งซื้อทดแทน"]
+    },
+    "HDF": {
+      "problems": ["เครื่องจักร HDF-02 เปิดเครื่องแล้ว Main Drive ตัด"],
+      "causes": ["เกิดปัญหาจากชุด Filter ตัน"],
+      "fixes": ["ทำการเปลี่ยน Filter ใหม่ทดแทน 2 Pc"]
+    },
+    "LASER": {
+      "problems": ["ชุด Timer Relay ของระบบหล่อเย็นชำรุด และมีลมรั่วบริเวณ Bowl Module","อุปกรณ์ Pump น้ำมัน Conveyer ของเครื่อง Laser LS-03 ชำรุด"],
+      "causes": ["เกิดจากอายุการใช้งานของอุปกรณ์","เกิดจาก Sensor เช็ค Piston ชำรุด"],
+      "fixes": ["ทำการเปลี่ยนอุปกรณ์ใหม่ทดแทน","นำ Spare Part ไปเปลี่ยนและสั่งซื้อทดแทน"]
+    },
+    "ROBOT": {
+      "problems": ["Robot RB-102 สัญญาณเชื่อมต่อขาดหาย"],
+      "causes": ["เกิดจากสาย CC-Link ระหว่าง Robot กับ ตู้เชื่อมชำรุด"],
+      "fixes": ["ทำการตรวจสอบและขันให้แน่น"]
+    },
+    "SCRAP CONVEYOR": {
+      "problems": ["ราง Scrap Conveyer Laser HDF-02 ชำรุด"],
+      "causes": ["เนื่องจากการสึกหรอของอุปกรณ์ที่ใช้มาระยะเวลานาน"],
+      "fixes": ["แก้ไขซ่อมให้ผลิตงานได้ชั่วคราว"]
+    },
+    "ไม่ระบุ": {
+      "problems": ["ประตูหลุดเปิด-ปิดไม่ได้","ไฟส่องสว่างห้องน้ำไม่ติด","Conveyer Load Pipe Line GOR Alarm"],
+      "causes": ["น็อตยึดรางสไลด์ขาด","หลอดไฟชำรุด","Proximity บริเวณ Griper หลวม"],
+      "fixes": ["เปลี่ยนน็อตใหม่และขันแน่น","เปลี่ยนหลอดไฟใหม่ 2 หลอด","ปรับตำแหน่ง PROX ใหม่"]
+    }
+  },
+  "monthly": {
+    "BENDING":{"1":8,"2":10,"3":6},
+    "HDF":{"1":1,"2":1,"3":1},
+    "LASER":{"1":7,"2":5,"3":0},
+    "ROBOT":{"1":8,"2":25,"3":3},
+    "SIMPAC":{"1":3,"2":9,"3":1},
+    "ไม่ระบุ":{"1":18,"2":14,"3":4},
+    "SEYI":{"1":1,"2":3,"3":0},
+    "CRANE":{"1":0,"2":1,"3":1},
+    "RIVET":{"1":3,"2":0,"3":0},
+    "OTHER":{"1":7,"2":12,"3":3}
+  },
+  "totals": {
+    "total_mo":142,"total_budget":95360,"total_repair_hours":15.2,
+    "breakdown":6,"shutdown":7,"service":100
+  }
+};
+
+// ─── Color palette per machine ──────────────────────────────────
+const MC_COLORS = {
+  'ROBOT':        '#00d4ff',
+  'BENDING':      '#ff6b35',
+  'ไม่ระบุ':      '#94a3b8',
+  'SIMPAC':       '#7fff6b',
+  'LASER':        '#c77dff',
+  'HDF':          '#ffca28',
+  'SEYI':         '#f472b6',
+  'RIVET':        '#34d399',
+  'CRANE':        '#60a5fa',
+  'HYDROFORM':    '#a78bfa',
+  'SCRAP CONVEYOR':'#fb923c',
+  'CONVEYOR':     '#38bdf8',
+  'NUT FEEDER':   '#e879f9',
+  'MARK':         '#4ade80',
+  'STATIONARY':   '#fbbf24',
+  'STUD':         '#f87171',
+  'HANKDHELD MOBILE': '#818cf8',
+};
+function mcColor(name) { return MC_COLORS[name] || '#64748b'; }
+
+// ─── Monthly Stacked Bar Chart ──────────────────────────────────
+function buildMonthlyChart() {
+  const months = ['มกราคม','กุมภาพันธ์','มีนาคม'];
+  const topMC = ['ROBOT','BENDING','ไม่ระบุ','SIMPAC','LASER','HDF','OTHER'];
+  const datasets = topMC.map(mc => {
+    const mdata = DATA.monthly[mc] || {};
+    return {
+      label: mc,
+      data: [mdata[1]||0, mdata[2]||0, mdata[3]||0],
+      backgroundColor: mcColor(mc),
+      borderRadius: 4,
+      borderSkipped: false,
+    };
+  });
+
+  new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: { labels: months, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#94a3b8', font: { size: 10 }, padding: 10, boxWidth: 10 }
+        },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#64748b' }
+        },
+        y: {
+          stacked: true,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#64748b' }
+        }
+      }
+    }
+  });
+}
+
+// ─── Type Donut Chart ───────────────────────────────────────────
+function buildTypeChart() {
+  new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Service', 'Breakdown', 'Shut Down', 'Corrective'],
+      datasets: [{
+        data: [100, 6, 7, 1],
+        backgroundColor: ['#00d4ff','#ff4444','#ffca28','#7fff6b'],
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#94a3b8', font: { size: 10 }, padding: 10, boxWidth: 10 }
+        }
+      }
+    }
+  });
+}
+
+// ─── Rank Table ─────────────────────────────────────────────────
+function buildRankTable() {
+  const sorted = [...DATA.summary].sort((a,b) => b.total - a.total).slice(0,7);
+  const max = sorted[0].total;
+  const tbl = document.getElementById('rankTable');
+  tbl.innerHTML = `
+    <tr>
+      <th>#</th><th>เครื่องจักร</th><th></th><th>MO</th>
+    </tr>
+    ${sorted.map((r,i) => `
+      <tr>
+        <td class="rank-num">${i+1}</td>
+        <td class="rank-name" style="color:${mcColor(r['MC.Name'])}">${r['MC.Name']}</td>
+        <td style="width:120px">
+          <div class="rank-bar-wrap">
+            <div class="rank-bar-fill" style="width:${(r.total/max*100).toFixed(0)}%;background:${mcColor(r['MC.Name'])}"></div>
+          </div>
+        </td>
+        <td class="rank-count" style="color:${mcColor(r['MC.Name'])}">${r.total}</td>
+      </tr>
+    `).join('')}
+  `;
+}
+
+// ─── Machine Cards ──────────────────────────────────────────────
+let currentFilter = 'all';
+
+function filterCards(type, el) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  buildMcCards();
+  closeDetail();
+}
+
+function buildMcCards() {
+  const grid = document.getElementById('mcGrid');
+  let items = DATA.summary;
+
+  if (currentFilter === 'breakdown') items = items.filter(d => d.breakdown > 0);
+  else if (currentFilter === 'shutdown') items = items.filter(d => d.shutdown > 0);
+  else if (currentFilter === 'service') items = items.filter(d => d.service > 0);
+
+  grid.innerHTML = items.map(d => {
+    const name = d['MC.Name'];
+    const color = mcColor(name);
+    const t = d.total;
+    const sw = t ? (d.service/t*100).toFixed(0) : 0;
+    const bw = t ? (d.breakdown/t*100).toFixed(0) : 0;
+    const sdw = t ? (d.shutdown/t*100).toFixed(0) : 0;
+    return `
+      <div class="mc-card" id="mc-${name.replace(/\s+/g,'-')}" onclick="showDetail('${name}')">
+        <div class="mc-header">
+          <span class="mc-name" style="color:${color}">${name}</span>
+          <span class="mc-total">${t} MO</span>
+        </div>
+        <div class="mc-bar">
+          <div class="mc-bar-s" style="width:${sw}%"></div>
+          <div class="mc-bar-bd" style="width:${bw}%"></div>
+          <div class="mc-bar-sd" style="width:${sdw}%"></div>
+        </div>
+        <div class="mc-stats">
+          <div class="mc-stat">
+            <div class="mc-stat-val stat-service">${d.service}</div>
+            <div class="mc-stat-label">Service</div>
+          </div>
+          <div class="mc-stat">
+            <div class="mc-stat-val stat-breakdown">${d.breakdown}</div>
+            <div class="mc-stat-label">Breakdown</div>
+          </div>
+          <div class="mc-stat">
+            <div class="mc-stat-val stat-shutdown">${d.shutdown}</div>
+            <div class="mc-stat-label">Shut Down</div>
+          </div>
+        </div>
+        <div class="mc-footer">
+          <div class="mc-hours">ซ่อม <strong>${d.repair_hours}</strong> ชม.</div>
+          ${d.budget > 0 ? `<div class="mc-budget">งบ <strong>${d.budget.toLocaleString()}</strong> ฿</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── Detail Panel ───────────────────────────────────────────────
+let activeCard = null;
+
+function showDetail(name) {
+  const panel = document.getElementById('detailPanel');
+  const d = DATA.detail[name] || {problems:[], causes:[], fixes:[]};
+
+  if (activeCard === name) { closeDetail(); return; }
+
+  document.querySelectorAll('.mc-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById('mc-' + name.replace(/\s+/g,'-'));
+  if (card) card.classList.add('active');
+  activeCard = name;
+
+  document.getElementById('detailName').textContent = name;
+
+  const listHtml = (arr, cls) => arr.length
+    ? `<ul class="detail-list ${cls}">${arr.map(x => `<li>${x}</li>`).join('')}</ul>`
+    : `<p class="empty-detail">— ไม่มีข้อมูล —</p>`;
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-section">
+      <h4>🔴 รายละเอียดปัญหา</h4>
+      ${listHtml(d.problems, '')}
+    </div>
+    <div class="detail-section">
+      <h4>⚠️ สาเหตุ</h4>
+      ${listHtml(d.causes, 'causes')}
+    </div>
+    <div class="detail-section">
+      <h4>✅ การแก้ไข</h4>
+      ${listHtml(d.fixes, 'fixes')}
+    </div>
+  `;
+
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('show');
+  document.querySelectorAll('.mc-card').forEach(c => c.classList.remove('active'));
+  activeCard = null;
+}
+
+// ─── Init ───────────────────────────────────────────────────────
+buildMonthlyChart();
+buildTypeChart();
+buildRankTable();
+buildMcCards();
+</script>
+</body>
+</html>
