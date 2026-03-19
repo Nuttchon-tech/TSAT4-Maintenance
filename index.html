@@ -750,13 +750,21 @@ function buildMonthlyChart() {
 
 // ─── Type Donut Chart ───────────────────────────────────────────
 function buildTypeChart() {
+  // ตัด "ไม่ระบุ" ออก
+  const filtered = DATA.summary.filter(d => d["MC.Name"] !== "ไม่ระบุ");
+
+  // รวมค่าใหม่
+  const service = filtered.reduce((sum, d) => sum + d.service, 0);
+  const breakdown = filtered.reduce((sum, d) => sum + d.breakdown, 0);
+  const shutdown = filtered.reduce((sum, d) => sum + d.shutdown, 0);
+
   new Chart(document.getElementById('typeChart'), {
     type: 'doughnut',
     data: {
-      labels: ['Service', 'Breakdown', 'Shut Down', 'Corrective'],
+      labels: ['Service', 'Breakdown', 'Shut Down'],
       datasets: [{
-        data: [100, 6, 7, 1],
-        backgroundColor: ['#00d4ff','#ff4444','#ffca28','#7fff6b'],
+        data: [service, breakdown, shutdown],
+        backgroundColor: ['#00d4ff','#ff4444','#ffca28'],
         borderWidth: 0,
         hoverOffset: 6,
       }]
