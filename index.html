@@ -859,10 +859,6 @@ function buildTypeChart() {
   const service = filtered.reduce((sum, d) => sum + d.service, 0);
   const breakdown = filtered.reduce((sum, d) => sum + d.breakdown, 0);
   const shutdown = filtered.reduce((sum, d) => sum + d.shutdown, 0);
-  if (service + breakdown + shutdown === 0) {
-  console.warn("No data for type chart");
-  return;
-}
 
   new Chart(document.getElementById('typeChart'), {
     type: 'doughnut',
@@ -892,7 +888,7 @@ function buildTypeChart() {
 function buildRankTable() {
   const sorted = [...DATA.summary]
   .filter(d => d["MC.Name"] !== "ไม่ระบุ")
-  .sort((a,b) => b.total - a.total).slice(0,5);
+  .sort((a,b) => b.total - a.total).slice(0,7);
   const max = sorted[0].total;
   const tbl = document.getElementById('rankTable');
   tbl.innerHTML = `
@@ -1037,78 +1033,12 @@ function calculateKPIWithoutUnknown() {
   document.getElementById('kpi-hours').textContent = hours.toFixed(1);
   document.getElementById('kpi-budget').textContent = budget.toLocaleString();
 }
-  // ✅ ใส่ตรงนี้ (ก่อน loadGoogleSheet)
-function toNumber(val) {
-  if (!val) return 0;
-  return Number(val.replace(/,/g, '').trim()) || 0;
-}
-
-async function loadGoogleSheet() {
-  const url = "https://docs.google.com/spreadsheets/d/14mZzwsT57fsnlHboRd8v6BV5EbT0_QaQwxZA1S_3DAs/export?format=csv&gid=0";
-
-  const res = await fetch(url);
-  const text = await res.text();
-
-  const rows = text.split('\n').slice(1);
-
- const summary = rows.map(r => {
-
-  function parseCSVRow(row) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let char of row) {
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        result.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    result.push(current);
-    return result.map(x => x.trim());
-  }
-
-  const c = parseCSVRow(r); // ✅ ต้องมีบรรทัดนี้
-
-  return {
-    "MC.Name": c[0] || "UNKNOWN",
-    total: toNumber(c[1]),
-    service: toNumber(c[2]),
-    breakdown: toNumber(c[3]),
-    shutdown: toNumber(c[4]),
-    budget: toNumber(c[5]),
-    repair_hours: toNumber(c[6])
-  };
-
-}).filter(d => d["MC.Name"]);
-
-  console.log("DATA FROM SHEET:", summary); // 👈 สำคัญ
-
-  // ❗ เช็คก่อนทับ
-  if (summary.length > 0) {
-    DATA.summary = summary;
-  }
-
-  calculateKPIWithoutUnknown();
-  buildMonthlyChart();
-  buildTypeChart();
-  buildRankTable();
-  buildMcCards();
-}
 // ─── Init ───────────────────────────────────────────────────────
-loadGoogleSheet();
-
-// อัปเดตทุก 3 ชั่วโมง
-setInterval(loadGoogleSheet, 3 * 60 * 60 * 1000);
-//calculateKPIWithoutUnknown();
-//buildMonthlyChart();
-//buildTypeChart();
-//buildRankTable();
-//buildMcCards();
+calculateKPIWithoutUnknown();
+buildMonthlyChart();
+buildTypeChart();
+buildRankTable();
+buildMcCards();
 </script>
 </body>
 </html>
