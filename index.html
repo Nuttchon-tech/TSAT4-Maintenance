@@ -1033,12 +1033,46 @@ function calculateKPIWithoutUnknown() {
   document.getElementById('kpi-hours').textContent = hours.toFixed(1);
   document.getElementById('kpi-budget').textContent = budget.toLocaleString();
 }
+  async function loadGoogleSheet() {
+  const url = "https://docs.google.com/spreadsheets/d/14mZzwsT57fsnlHboRd8v6BV5EbT0_QaQwxZA1S_3DAs/export?format=csv&gid=0";
+
+  const res = await fetch(url);
+  const text = await res.text();
+
+  const rows = text.split('\n').slice(1);
+
+  const summary = rows.map(r => {
+    const c = r.split(',');
+    return {
+      "MC.Name": c[0],
+      total: Number(c[1]),
+      service: Number(c[2]),
+      breakdown: Number(c[3]),
+      shutdown: Number(c[4]),
+      budget: Number(c[5]),
+      repair_hours: Number(c[6])
+    };
+  });
+
+  DATA.summary = summary;
+
+  // refresh dashboard
+  calculateKPIWithoutUnknown();
+  buildMonthlyChart();
+  buildTypeChart();
+  buildRankTable();
+  buildMcCards();
+}
 // ─── Init ───────────────────────────────────────────────────────
-calculateKPIWithoutUnknown();
-buildMonthlyChart();
-buildTypeChart();
-buildRankTable();
-buildMcCards();
+loadGoogleSheet();
+
+// อัปเดตทุก 3 ชั่วโมง
+setInterval(loadGoogleSheet, 3 * 60 * 60 * 1000);
+//calculateKPIWithoutUnknown();
+//buildMonthlyChart();
+//buildTypeChart();
+//buildRankTable();
+//buildMcCards();
 </script>
 </body>
 </html>
