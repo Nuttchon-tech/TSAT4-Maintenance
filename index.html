@@ -888,7 +888,7 @@ function buildTypeChart() {
 function buildRankTable() {
   const sorted = [...DATA.summary]
   .filter(d => d["MC.Name"] !== "ไม่ระบุ")
-  .sort((a,b) => b.total - a.total).slice(0,7);
+  .sort((a,b) => b.total - a.total).slice(0,5);
   const max = sorted[0].total;
   const tbl = document.getElementById('rankTable');
   tbl.innerHTML = `
@@ -1033,6 +1033,13 @@ function calculateKPIWithoutUnknown() {
   document.getElementById('kpi-hours').textContent = hours.toFixed(1);
   document.getElementById('kpi-budget').textContent = budget.toLocaleString();
 }
+  // ✅ ใส่ตรงนี้ (ก่อน loadGoogleSheet)
+function toNumber(val) {
+  if (!val) return 0;
+  return Number(val.replace(/,/g, '').trim()) || 0;
+}
+
+async function loadGoogleSheet() {
   async function loadGoogleSheet() {
   const url = "https://docs.google.com/spreadsheets/d/14mZzwsT57fsnlHboRd8v6BV5EbT0_QaQwxZA1S_3DAs/export?format=csv&gid=0";
 
