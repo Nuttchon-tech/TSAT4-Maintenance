@@ -778,6 +778,8 @@ function buildMonthlyChart() {
       backgroundColor: mcColor(mc),
       borderRadius: 4,
       borderSkipped: false,
+      barThickness: 12,        // กำหนดความกว้างแท่ง (ยิ่งน้อย = ยิ่งเล็ก)
+      maxBarThickness: 16,     // จำกัดไม่ให้แท่งใหญ่เกิน
     };
   });
 
