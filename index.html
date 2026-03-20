@@ -1051,8 +1051,40 @@ async function loadGoogleSheet() {
 
   const rows = text.split('\n').slice(1);
 
-  const summary = rows.map(r => {
-    function parseCSVRow(row) {
+ const summary = rows.map(r => {
+
+  function parseCSVRow(row) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let char of row) {
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result.map(x => x.trim());
+  }
+
+  const c = parseCSVRow(r); // ✅ ต้องมีบรรทัดนี้
+
+  return {
+    "MC.Name": c[0] || "UNKNOWN",
+    total: toNumber(c[1]),
+    service: toNumber(c[2]),
+    breakdown: toNumber(c[3]),
+    shutdown: toNumber(c[4]),
+    budget: toNumber(c[5]),
+    repair_hours: toNumber(c[6])
+  };
+
+}).filter(d => d["MC.Name"]);
   const result = [];
   let current = '';
   let inQuotes = false;
