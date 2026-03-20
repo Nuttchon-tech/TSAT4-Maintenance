@@ -507,6 +507,37 @@
     color: var(--muted);
   }
   footer span { color: var(--accent); }
+  /* ===== SPLIT SCREEN (เพิ่มตรงนี้) ===== */
+.split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.left-panel {
+  max-height: 75vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.right-panel {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+/* ให้ detail แสดงตลอด */
+.detail-panel {
+  display: block !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
 <body>
@@ -596,15 +627,26 @@
     </div>
   </div>
 
-  <div id="detailPanel" class="detail-panel">
-    <div class="detail-header">
-      <div class="detail-mc-name" id="detailName"></div>
-      <button class="detail-close" onclick="closeDetail()">✕ ปิด</button>
-    </div>
-    <div class="detail-body" id="detailBody"></div>
+  <div class="split-layout">
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="mc-grid" id="mcGrid"></div>
   </div>
 
-  <div class="mc-grid" id="mcGrid"></div>
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div id="detailPanel" class="detail-panel show">
+      <div class="detail-header">
+        <div class="detail-mc-name" id="detailName">เลือกเครื่องจักร</div>
+      </div>
+      <div class="detail-body" id="detailBody">
+        <p class="empty-detail">กรุณาเลือกเครื่องจักรเพื่อดูรายละเอียด</p>
+      </div>
+    </div>
+  </div>
+
+</div>
 
 </main>
 
@@ -938,8 +980,6 @@ function showDetail(name) {
 const d = (DATA.detail[name] && DATA.detail[name][type]) 
   || {problems:[], causes:[], fixes:[]};
 
-  if (activeCard === name) { closeDetail(); return; }
-
   document.querySelectorAll('.mc-card').forEach(c => c.classList.remove('active'));
   const card = document.getElementById('mc-' + name.replace(/\s+/g,'-'));
   if (card) card.classList.add('active');
@@ -965,13 +1005,14 @@ const d = (DATA.detail[name] && DATA.detail[name][type])
       ${listHtml(d.fixes, 'fixes')}
     </div>
   `;
-
-  panel.classList.add('show');
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function closeDetail() {
-  document.getElementById('detailPanel').classList.remove('show');
+  document.getElementById('detailName').textContent = 'เลือกเครื่องจักร';
+  document.getElementById('detailBody').innerHTML =
+    '<p class="empty-detail">กรุณาเลือกเครื่องจักรเพื่อดูรายละเอียด</p>';
+
   document.querySelectorAll('.mc-card').forEach(c => c.classList.remove('active'));
   activeCard = null;
 }
