@@ -1052,7 +1052,24 @@ async function loadGoogleSheet() {
   const rows = text.split('\n').slice(1);
 
   const summary = rows.map(r => {
-    const c = r.split(',').map(x => x.trim());
+    function parseCSVRow(row) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let char of row) {
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result.map(x => x.trim());
+}
 
     return {
       "MC.Name": c[0] || "UNKNOWN",
