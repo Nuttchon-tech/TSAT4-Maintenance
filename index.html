@@ -1045,12 +1045,12 @@ function calculateKPIWithoutUnknown() {
     const c = r.split(',');
     return {
       "MC.Name": c[0],
-      total: Number(c[1]),
-      service: Number(c[2]),
-      breakdown: Number(c[3]),
-      shutdown: Number(c[4]),
-      budget: Number(c[5]),
-      repair_hours: Number(c[6])
+     total: toNumber(c[1]),
+service: toNumber(c[2]),
+breakdown: toNumber(c[3]),
+shutdown: toNumber(c[4]),
+budget: toNumber(c[5]),
+repair_hours: toNumber(c[6])
     };
   });
 
