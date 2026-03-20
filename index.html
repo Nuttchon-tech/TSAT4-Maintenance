@@ -859,6 +859,10 @@ function buildTypeChart() {
   const service = filtered.reduce((sum, d) => sum + d.service, 0);
   const breakdown = filtered.reduce((sum, d) => sum + d.breakdown, 0);
   const shutdown = filtered.reduce((sum, d) => sum + d.shutdown, 0);
+  if (service + breakdown + shutdown === 0) {
+  console.warn("No data for type chart");
+  return;
+}
 
   new Chart(document.getElementById('typeChart'), {
     type: 'doughnut',
@@ -1040,7 +1044,6 @@ function toNumber(val) {
 }
 
 async function loadGoogleSheet() {
-  async function loadGoogleSheet() {
   const url = "https://docs.google.com/spreadsheets/d/14mZzwsT57fsnlHboRd8v6BV5EbT0_QaQwxZA1S_3DAs/export?format=csv&gid=0";
 
   const res = await fetch(url);
@@ -1049,21 +1052,26 @@ async function loadGoogleSheet() {
   const rows = text.split('\n').slice(1);
 
   const summary = rows.map(r => {
-    const c = r.split(',');
+    const c = r.split(',').map(x => x.trim());
+
     return {
-      "MC.Name": c[0],
-     total: toNumber(c[1]),
-service: toNumber(c[2]),
-breakdown: toNumber(c[3]),
-shutdown: toNumber(c[4]),
-budget: toNumber(c[5]),
-repair_hours: toNumber(c[6])
+      "MC.Name": c[0] || "UNKNOWN",
+      total: toNumber(c[1]),
+      service: toNumber(c[2]),
+      breakdown: toNumber(c[3]),
+      shutdown: toNumber(c[4]),
+      budget: toNumber(c[5]),
+      repair_hours: toNumber(c[6])
     };
-  });
+  }).filter(d => d["MC.Name"]); // กันแถวว่าง
 
-  DATA.summary = summary;
+  console.log("DATA FROM SHEET:", summary); // 👈 สำคัญ
 
-  // refresh dashboard
+  // ❗ เช็คก่อนทับ
+  if (summary.length > 0) {
+    DATA.summary = summary;
+  }
+
   calculateKPIWithoutUnknown();
   buildMonthlyChart();
   buildTypeChart();
